@@ -1,368 +1,474 @@
 
-<!DOCTYPE html>
+                        <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Indian Regional Politics Simulator</title>
+    <title>Indian Political Alliance & Seat-Sharing Simulator</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #eef2f5;
+            background-color: #f4f7f6;
             color: #2c3e50;
+            margin: 0;
+            padding: 20px;
             display: flex;
             justify-content: center;
-            padding: 20px;
-            margin: 0;
         }
-        #game-board {
-            background: white;
+        #game-container {
             width: 100%;
-            max-width: 900px;
-            border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            padding: 30px;
-            box-sizing: border-box;
-            display: none;
-        }
-        #start-screen {
+            max-width: 1150px;
             background: white;
-            width: 100%;
-            max-width: 650px;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
-            padding: 40px;
+            box-shadow: 0 10px 35px rgba(0,0,0,0.1);
+            padding: 25px;
             box-sizing: border-box;
         }
-        header {
+        #setup-screen {
             text-align: center;
-            border-bottom: 3px solid #2c3e50;
+            max-width: 700px;
+            margin: 40px auto;
+        }
+        .setup-card {
+            background: #fff;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-align: left;
+        }
+        .setup-card:hover {
+            border-color: #2980b9;
+            background: #f8fbfe;
+        }
+        .setup-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #2980b9;
+            margin-bottom: 5px;
+        }
+        .alliance-tag {
+            display: inline-block;
+            padding: 4px 8px;
+            font-size: 0.8em;
+            font-weight: bold;
+            border-radius: 4px;
+            margin-top: 5px;
+        }
+        .tag-solo { background: #ffebee; color: #c62828; }
+        .tag-allied { background: #e8f5e9; color: #2e7d32; }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #34495e;
             padding-bottom: 15px;
             margin-bottom: 20px;
         }
-        h1 { margin: 0 0 10px 0; color: #1a252f; }
-        .party-subtitle { font-size: 1.1em; color: #7f8c8d; font-weight: bold; }
-        
-        /* Resource Bar */
-        .resource-dashboard {
+        .resource-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
+            grid-template-columns: repeat(4, 1fr);
             gap: 15px;
             margin-bottom: 25px;
+        }
+        .res-card {
+            background: #f8f9fa;
+            border: 1px solid #e2e8f0;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .res-label { font-size: 0.8em; text-transform: uppercase; color: #7f8c8d; font-weight: bold; }
+        .res-val { font-size: 1.4em; font-weight: bold; margin-top: 5px; }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 20px;
+        }
+        .sidebar {
             background: #f8f9fa;
             padding: 15px;
             border-radius: 8px;
-            border: 1px solid #dee2e6;
+            border: 1px solid #e2e8f0;
         }
-        .res-item { text-align: center; }
-        .res-title { font-size: 0.85em; text-transform: uppercase; color: #6c757d; font-weight: bold; }
-        .res-val { font-size: 1.6em; font-weight: bold; color: #2c3e50; margin-top: 5px; }
-        .res-val.funds { color: #27ae60; }
-        .res-val.cadre { color: #c0392b; }
-        .res-val.image { color: #2980b9; }
-
-        /* Territory Split */
-        .territory-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 25px;
+        .state-btn {
+            background: white;
+            border: 1px solid #cbd5e0;
+            padding: 12px;
+            width: 100%;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            text-align: left;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
         }
-        .territory-card {
-            padding: 20px;
+        .state-btn.active {
+            background: #34495e;
+            color: white;
+            border-color: #34495e;
+        }
+        .main-map {
+            background: white;
+            border: 1px solid #e2e8f0;
             border-radius: 8px;
-            border-left: 5px solid;
-            background: #fff;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            padding: 20px;
         }
-        .stronghold-card { border-color: #f39c12; }
-        .expansion-card { border-color: #8e44ad; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th, td { padding: 12px; text-align: left; border-bottom: 1px solid #edf2f7; }
+        th { background: #f4f6f8; color: #4a5568; font-size: 0.85em; text-transform: uppercase; }
         
-        .progress-bar { background-color: #ecf0f1; border-radius: 5px; height: 12px; margin: 10px 0; overflow: hidden; }
-        .progress-fill { height: 100%; width: 0%; transition: width 0.4s ease; }
-        .stronghold-fill { background-color: #f39c12; }
-        .expansion-fill { background-color: #8e44ad; }
+        .status-pill {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        .status-blocked { background: #e2e8f0; color: #718096; }
+        .status-contest { background: #e3f2fd; color: #0d47a1; }
 
-        /* Actions */
-        .actions-header {
-            font-size: 1.1em; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px;
+        .console {
+            background: #1a202c;
+            color: #a0aec0;
+            font-family: monospace;
+            padding: 15px;
+            border-radius: 6px;
+            height: 120px;
+            overflow-y: auto;
+            margin-top: 20px;
         }
-        .actions {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 25px;
+        .sim-btn {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 6px;
+            width: 100%;
+            cursor: pointer;
+            margin-top: 15px;
         }
-        button {
-            background-color: #34495e; color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-size: 0.95em; transition: 0.2s; text-align: left;
-        }
-        button:hover:not(:disabled) { background-color: #2c3e50; transform: translateY(-1px); }
-        button:disabled { background-color: #95a5a6; cursor: not-allowed; }
-        button small { display: block; color: #bdc3c7; margin-top: 4px; font-size: 0.85em; }
-        
-        .btn-str { background-color: #d68910; }
-        .btn-str:hover:not(:disabled) { background-color: #b9770e; }
-        .btn-exp { background-color: #7d3c98; }
-        .btn-exp:hover:not(:disabled) { background-color: #6c3483; }
-
-        /* Log */
-        #log-container {
-            background: #1e272e; color: #d2dae2; font-family: 'Consolas', monospace; padding: 15px; border-radius: 8px; height: 200px; overflow-y: auto; font-size: 0.9em;
-        }
-        .log-entry { margin-bottom: 8px; border-bottom: 1px dashed #485460; padding-bottom: 4px; }
-        .turn-header { text-align: center; font-size: 1.2em; font-weight: bold; color: #e74c3c; margin-bottom: 15px; }
-        
-        /* Start Screen styling */
-        .preset-card { border: 1px solid #ddd; padding: 15px; margin-bottom: 15px; border-radius: 8px; cursor: pointer; transition: 0.2s; }
-        .preset-card:hover { border-color: #3498db; background: #f4f9fc; }
-        .preset-title { font-weight: bold; font-size: 1.1em; color: #2980b9; }
+        .sim-btn:hover { background: #219653; }
     </style>
 </head>
 <body>
 
-<div id="start-screen">
-    <h1 style="text-align: center;">Indian Regional Party Simulator</h1>
-    <p style="text-align: center; margin-bottom: 25px;">Select your political archetype to begin.</p>
-    
-    <div class="preset-card" onclick="startGame('Urban Minority Outfit', 'Telangana', 'Maharashtra', 35, 2, 10, 5000)">
-        <div class="preset-title">Urban Minority Outfit (e.g., AIMIM)</div>
-        <p>Strong base in a historic city (Telangana). Struggling to shed the "B-Team" label while aggressively expanding into Maharashtra and Bihar.</p>
-    </div>
-    
-    <div class="preset-card" onclick="startGame('Traditional Coalition Partner', 'Kerala', 'Tamil Nadu', 45, 1, 15, 8000)">
-        <div class="preset-title">Traditional Coalition Partner (e.g., IUML)</div>
-        <p>Deeply entrenched in Kerala within a major alliance. Lots of cadre, but incredibly difficult to establish a footprint outside the home state.</p>
-    </div>
-
-    <div class="preset-card" onclick="startGame('Emerging Regional Force', 'Uttar Pradesh', 'Madhya Pradesh', 25, 5, 8, 3000)">
-        <div class="preset-title">Caste-Based Regional Force (e.g., SP / SBSP)</div>
-        <p>Commanding a specific vote bank in UP. Needs high funds to manage massive rallies and expand into neighboring Hindi-belt states.</p>
-    </div>
-</div>
-
-<div id="game-board">
-    <header>
-        <h1>Election War Room</h1>
-        <div class="party-subtitle" id="party-desc">Party Profile</div>
-    </header>
-
-    <div class="turn-header" id="phase-display">Phase 1: Stronghold Assembly Elections (12 Weeks Left)</div>
-
-    <div class="resource-dashboard">
-        <div class="res-item">
-            <div class="res-title">Party Funds (Crores)</div>
-            <div class="res-val funds" id="val-funds">₹10 Cr</div>
+<div id="game-container">
+    <!-- Screen 1: Archetype & Alliance Selection -->
+    <div id="setup-screen">
+        <h2>Indian Electoral Strategy Room</h2>
+        <p style="color: #718096; margin-bottom: 30px;">Select your political party blueprint and electoral stance. Alliances restrict where you can contest but protect you from split-vote penalties.</p>
+        
+        <div class="setup-card" onclick="initGame('AIMIM', 'solo')">
+            <div class="setup-title">Assertive Aggressive Strategy (AIMIM Archetype)</div>
+            <div>Focus States: <b>Telangana & Bihar</b></div>
+            <p style="font-size: 0.9em; color: #4a5568; margin: 5px 0 0 0;">Stance: <b>GO SOLO</b>. Contest any seat you want. However, larger secular parties will brand you a "Vote-Cutter," dropping your alliance appeal and making tough multi-cornered fights highly volatile.</p>
+            <span class="alliance-tag tag-solo">Independent / Multi-Cornered Fights</span>
         </div>
-        <div class="res-item">
-            <div class="res-title">Active Cadre</div>
-            <div class="res-val cadre" id="val-cadre">5,000</div>
-        </div>
-        <div class="res-item">
-            <div class="res-title">National Image</div>
-            <div class="res-val image" id="val-image">60%</div>
+
+        <div class="setup-card" onclick="initGame('IUML', 'allied')">
+            <div class="setup-title">Pragmatic Alliance Strategy (IUML Archetype)</div>
+            <div>Focus States: <b>Kerala & Tamil Nadu</b></div>
+            <p style="font-size: 0.9em; color: #4a5568; margin: 5px 0 0 0;">Stance: <b>PRE-POLL ALLIANCE</b> with Secular Coalition. You are gracefully conceded your core traditional strongholds. You cannot expand or contest outside your allocated quota, but your core votes consolidate perfectly.</p>
+            <span class="alliance-tag tag-allied">Secular Coalition Partner</span>
         </div>
     </div>
 
-    <div class="territory-grid">
-        <div class="territory-card stronghold-card">
-            <h3 style="margin-top:0; color: #d35400;">Stronghold: <span id="str-name">State</span></h3>
-            <p style="font-size:0.9em; color:#555;">Must maintain base to survive.</p>
-            <div style="font-size: 1.5em; font-weight: bold;" id="str-pop">35%</div>
-            <div class="progress-bar"><div class="progress-fill stronghold-fill" id="str-bar"></div></div>
-            <small id="str-target">Target to retain power: 40%</small>
+    <!-- Screen 2: Active War Room Dashboard -->
+    <div id="war-room" style="display: none;">
+        <header>
+            <h1 id="party-header">Party War Room</h1>
+            <div style="font-weight: bold; color: #e53e3e;" id="weeks-counter">Weeks to Campaign: 6</div>
+        </header>
+
+        <div class="resource-grid">
+            <div class="res-card">
+                <div class="res-label">Electoral Stance</div>
+                <div class="res-val" id="res-stance" style="font-size:1.1em; color:#2b6cb0;">-</div>
+            </div>
+            <div class="res-card">
+                <div class="res-label">Campaign Funds</div>
+                <div class="res-val" style="color: #2f855a;" id="res-funds">₹30.0 Cr</div>
+            </div>
+            <div class="res-card">
+                <div class="res-label">Secular Vote Consolidation</div>
+                <div class="res-val" style="color: #b7791f;" id="res-consolidation">100%</div>
+            </div>
+            <div class="res-card">
+                <div class="res-label">"Vote-Cutter" Backlash</div>
+                <div class="res-val" style="color: #c53030;" id="res-backlash">0%</div>
+            </div>
         </div>
-        <div class="territory-card expansion-card">
-            <h3 style="margin-top:0; color: #8e44ad;">Expansion: <span id="exp-name">State</span></h3>
-            <p style="font-size:0.9em; color:#555;">Required for National Party status.</p>
-            <div style="font-size: 1.5em; font-weight: bold;" id="exp-pop">2%</div>
-            <div class="progress-bar"><div class="progress-fill expansion-fill" id="exp-bar"></div></div>
-            <small id="exp-target">Target for state entry: 15%</small>
+
+        <div class="dashboard">
+            <div class="sidebar">
+                <h3 style="margin-top:0; font-size:0.9em; text-transform:uppercase; color:#718096;">Theater Maps</h3>
+                <div id="state-buttons-container"></div>
+            </div>
+
+            <div class="main-map">
+                <h3 id="active-state-title" style="margin-top: 0; color: #2d3748;">State Workspace</h3>
+                <p id="state-strategy-tip" style="font-size: 0.9em; color: #718096; margin-bottom: 15px;"></p>
+                
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Constituency</th>
+                            <th>Seat Category</th>
+                            <th>Stance Status</th>
+                            <th>Your Win Projection</th>
+                        </tr>
+                    </thead>
+                    <tbody id="constituency-rows"></tbody>
+                </table>
+            </div>
         </div>
-    </div>
 
-    <div class="actions-header">Resource & Narrative Actions</div>
-    <div class="actions">
-        <button onclick="act('fundraise')">Meet Industrialists<br><small>+₹4-8 Cr | -National Image</small></button>
-        <button onclick="act('recruit')">Membership Drive (-₹2 Cr)<br><small>+1000 to 2500 Cadre</small></button>
-        <button onclick="act('welfare')">Flood/Crisis Relief (-₹3 Cr)<br><small>+National Image | +Slight Vote Share</small></button>
-        <button onclick="act('polarize')">Aggressive Rhetoric<br><small>+Vote Share in Stronghold | -National Image (Risky)</small></button>
+        <div class="console" id="log-console"></div>
+        <button class="sim-btn" onclick="simulateWeek()">Run Weekly Ground Rallies & Update Projections</button>
     </div>
-
-    <div class="actions-header">Campaign Actions</div>
-    <div class="actions">
-        <button class="btn-str" onclick="act('rally_str')">Stronghold Mega Rally (-₹3 Cr, -500 Cadre)<br><small>Boosts Stronghold Vote Share heavily.</small></button>
-        <button class="btn-exp" onclick="act('rally_exp')">Expansion State Rally (-₹5 Cr, -1500 Cadre)<br><small>Costs more. Harder to gain traction.</small></button>
-    </div>
-
-    <div class="actions-header">War Room Log</div>
-    <div id="log-container"></div>
 </div>
 
 <script>
-    const phases = [
-        { name: "Phase 1: Stronghold State Assembly Elections", turns: 12, reqStr: 40, reqExp: 0 },
-        { name: "Phase 2: Expansion State Assembly Elections", turns: 12, reqStr: 0, reqExp: 15 },
-        { name: "Phase 3: Lok Sabha (General) Elections", turns: 15, reqStr: 45, reqExp: 20 }
-    ];
-
-    let st = {
-        archetype: "", strName: "", expName: "",
-        funds: 0, cadre: 0, image: 60,
-        strPop: 0, expPop: 0,
-        currentPhase: 0, turn: 0, gameOver: false
+    let db = {
+        party: "", stance: "", weeks: 6, funds: 30.0, backlash: 0, consolidation: 100,
+        activeStateKey: "",
+        states: {}
     };
 
-    function startGame(arch, str, exp, sPop, ePop, fnds, cdr) {
-        st = {
-            archetype: arch, strName: str, expName: exp,
-            funds: fnds, cadre: cdr, image: 60,
-            strPop: sPop, expPop: ePop,
-            currentPhase: 0, turn: 0, gameOver: false
-        };
-        document.getElementById('start-screen').style.display = 'none';
-        document.getElementById('game-board').style.display = 'block';
-        
-        log(`Formed War Room for <b>${arch}</b>.`);
-        log(`Stronghold: ${str}. Expansion Target: ${exp}.`);
+    const stateDataTemplates = {
+        AIMIM: {
+            telangana: {
+                name: "Telangana", tip: "Your historic bastion. High core polarization protects your home base.",
+                seats: [
+                    { name: "Hyderabad Central", type: "Bastion Stronghold", status: "Contesting", projection: 58 },
+                    { name: "Secunderabad", type: "Expansion Fringe", status: "Contesting", projection: 22 },
+                    { name: "Nizamabad", type: "Expansion Fringe", status: "Contesting", projection: 18 }
+                ]
+            },
+            bihar: {
+                name: "Bihar", tip: "Seemanchal sub-region holds potential, but aggressive entry triggers massive counter-polarization.",
+                seats: [
+                    { name: "Kishanganj", type: "High Potential Pocket", status: "Contesting", projection: 34 },
+                    { name: "Amour", type: "High Potential Pocket", status: "Contesting", projection: 41 },
+                    { name: "Patna Sahib", type: "Low Minority Base", status: "Contesting", projection: 8 }
+                ]
+            }
+        },
+        IUML: {
+            kerala: {
+                name: "Kerala", tip: "Partnered seamlessly with the Secular Democratic Front. Your allocated stronghold seats are secure.",
+                seats: [
+                    { name: "Malappuram", type: "Allocated Bastion", status: "Contesting", projection: 62 },
+                    { name: "Ponnani", type: "Allocated Bastion", status: "Contesting", projection: 59 },
+                    { name: "Trivandrum", type: "Coalition Partner Seat", status: "Friendly Conceded", projection: 0 }
+                ]
+            },
+            tamilnadu: {
+                name: "Tamil Nadu", tip: "Contesting on allocated slots within the dominant state ideological front.",
+                seats: [
+                    { name: "Ramanathapuram", type: "Allocated Pocket", status: "Contesting", projection: 54 },
+                    { name: "Vellore", type: "Coalition Partner Seat", status: "Friendly Conceded", projection: 0 },
+                    { name: "Chennai Central", type: "Coalition Partner Seat", status: "Friendly Conceded", projection: 0 }
+                ]
+            }
+        }
+    };
+
+    function initGame(partyArchetype, chosenStance) {
+        db.party = partyArchetype;
+        db.stance = chosenStance;
+        db.states = JSON.parse(JSON.stringify(stateDataTemplates[partyArchetype]));
+        db.activeStateKey = Object.keys(db.states)[0];
+
+        if(db.stance === 'solo') {
+            db.backlash = 25; 
+            db.consolidation = 60; // Votes split easily when running alone
+            db.funds = 20.0; // Independent operations lack large coalition funding machinery
+        } else {
+            db.backlash = 0;
+            db.consolidation = 95; // Full consolidation of mutual coalition votes
+            db.funds = 45.0; // Supported by major state allies
+        }
+
+        document.getElementById('setup-screen').style.display = 'none';
+        document.getElementById('war-room').style.display = 'block';
+
+        log(`War Room initialized for <b>${db.party}</b> running a <b>${db.stance.toUpperCase()}</b> strategy.`);
+        if(db.stance === 'solo') {
+            log("Warning: High 'Vote-Cutter' backlash active. Fringe seats suffer from severe vote splitting.");
+        } else {
+            log("Alliance Lock: You have cleanly conceded non-allocated seats to your secular partners to secure your strongholds.");
+        }
+
+        renderStateButtons();
         updateUI();
     }
 
-    function act(type) {
-        if (st.gameOver) return;
+    function renderStateButtons() {
+        const container = document.getElementById('state-buttons-container');
+        container.innerHTML = "";
+        Object.keys(db.states).forEach(key => {
+            const state = db.states[key];
+            const btn = document.createElement('button');
+            btn.className = `state-btn ${db.activeStateKey === key ? 'active' : ''}`;
+            btn.onclick = () => { db.activeStateKey = key; renderStateButtons(); updateUI(); };
+            
+            // Calculate average projection for the state
+            let activeSeats = state.seats.filter(s => s.status === "Contesting");
+            let avg = activeSeats.length ? activeSeats.reduce((sum, s) => sum + s.projection, 0) / activeSeats.length : 0;
 
-        let msg = "";
-        let f = 0, c = 0, i = 0, s = 0, e = 0;
-
-        switch(type) {
-            case 'fundraise':
-                f = rand(4, 8); i = -rand(3, 7);
-                msg = `Secured electoral bonds via untraceable trusts. Raised ₹${f} Cr, but transparency watchdogs criticized you.`;
-                break;
-            case 'recruit':
-                if (st.funds < 2) return logErr("Need ₹2 Cr for Membership Drive.");
-                f = -2; c = rand(1000, 2500);
-                msg = `Launched a successful ground-level membership drive. Recruited ${c} active workers.`;
-                break;
-            case 'welfare':
-                if (st.funds < 3) return logErr("Need ₹3 Cr for Relief Work.");
-                f = -3; i = rand(5, 12); s = rand(0, 2); e = rand(0, 1);
-                msg = `Organized extensive flood/crisis relief. National media praised your efforts. Image improved.`;
-                break;
-            case 'polarize':
-                i = -rand(8, 15); s = rand(3, 7); e = rand(1, 3);
-                msg = `Your leaders gave highly controversial speeches. It galvanized your core base but severely damaged your national acceptability.`;
-                break;
-            case 'rally_str':
-                if (st.funds < 3 || st.cadre < 500) return logErr("Need ₹3 Cr and 500 Cadre.");
-                f = -3; c = -500; s = rand(4, 8);
-                msg = `Massive show of strength in ${st.strName}. The crowd was electric!`;
-                break;
-            case 'rally_exp':
-                if (st.funds < 5 || st.cadre < 1500) return logErr("Need ₹5 Cr and 1500 Cadre.");
-                f = -5; c = -1500; e = rand(2, 5);
-                msg = `Flew leaders to ${st.expName}. Cadre struggled with local languages, but you made a dent in the vote bank.`;
-                break;
-        }
-
-        applyStats(f, c, i, s, e);
-        log(msg);
-        advanceTurn();
+            btn.innerHTML = `<span>${state.name}</span><span style="font-size:0.85em; opacity:0.8;">Proj: ${Math.floor(avg)}%</span>`;
+            container.appendChild(btn);
+        });
     }
 
-    function advanceTurn() {
-        st.turn++;
-        let phase = phases[st.currentPhase];
-        let turnsLeft = phase.turns - st.turn;
+    function updateUI() {
+        document.getElementById('party-header').innerText = `${db.party} Strategy Dashboard`;
+        document.getElementById('weeks-counter').innerText = `Weeks to Campaign Day: ${db.weeks}`;
+        document.getElementById('res-stance').innerText = db.stance === 'solo' ? "Going Solo (Flexible / Risky)" : "Allied (Restricted / Secure)";
+        document.getElementById('res-funds').innerText = `₹${db.funds.toFixed(1)} Cr`;
+        document.getElementById('res-consolidation').innerText = `${db.consolidation}%`;
+        document.getElementById('res-backlash').innerText = `${db.backlash}%`;
 
-        if (Math.random() < 0.3) triggerRandomEvent();
+        // Active workspace mapping
+        const state = db.states[db.activeStateKey];
+        document.getElementById('active-state-title').innerText = `${state.name} Deployment Status`;
+        document.getElementById('state-strategy-tip').innerText = state.tip;
 
-        if (turnsLeft <= 0) {
-            evaluatePhase();
+        const tbody = document.getElementById('constituency-rows');
+        tbody.innerHTML = "";
+
+        state.seats.forEach(seat => {
+            const tr = document.createElement('tr');
+            let isContesting = seat.status === "Contesting";
+            let pillClass = isContesting ? "status-contest" : "status-blocked";
+            let projDisplay = isContesting ? `${Math.floor(seat.projection)}% share` : "N/A (Conceded to Ally)";
+
+            tr.innerHTML = `
+                <td><b>${seat.name}</b></td>
+                <td style="color:#4a5568; font-size:0.9em;">${seat.type}</td>
+                <td><span class="status-pill ${pillClass}">${seat.status}</span></td>
+                <td style="font-weight:bold; color: ${isContesting && seat.projection >= 45 ? '#2f855a' : '#2b6cb0'}">${projDisplay}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function simulateWeek() {
+        if(db.weeks <= 0) return;
+        db.weeks--;
+
+        // Resource variations over turns
+        db.funds += (db.stance === 'allied') ? 2.5 : 1.0; 
+
+        // Apply distinct electoral math calculations based on stance
+        Object.keys(db.states).forEach(sKey => {
+            db.states[sKey].seats.forEach(seat => {
+                if(seat.status !== "Contesting") return;
+
+                if(db.stance === 'solo') {
+                    // Solo contenders face immense volatility outside core areas
+                    if(seat.type.includes("Bastion")) {
+                        seat.projection += (Math.random() * 4) - 1.5; // Core holds up reasonably well
+                    } else {
+                        // High backlash directly drains vote margins in fringe expansion seats
+                        let leakage = (db.backlash * 0.15);
+                        seat.projection += (Math.random() * 5) - (2 + leakage);
+                    }
+                } else {
+                    // Allied candidates get stable, highly consolidated vote shifts
+                    seat.projection += (Math.random() * 3) - 0.5;
+                }
+
+                // Bound boundaries safely
+                if(seat.projection > 100) seat.projection = 100;
+                if(seat.projection < 0) seat.projection = 0;
+            });
+        });
+
+        // Dynamic Narrative Event Simulation
+        if(Math.random() > 0.4) triggerElectoralEvent();
+
+        if(db.weeks <= 0) {
+            evaluateCountingDay();
         } else {
+            renderStateButtons();
             updateUI();
         }
     }
 
-    function triggerRandomEvent() {
-        const events = [
-            { cond: () => st.image < 40, effect: () => { applyStats(0,0,0, -4, -4); return "B-TEAM ALLEGATIONS! Secular alliances accuse you of splitting votes to help the ruling party. Vote share drops!"; } },
-            { cond: () => st.funds > 15, effect: () => { applyStats(-rand(3,6),0, -5, 0, 0); return "ED RAID! Central agencies raided your party offices. Funds seized, image takes a hit."; } },
-            { cond: () => true, effect: () => { applyStats(0, -rand(500, 1500), 0, -2, 0); return "INTERNAL REBELLION! A key local leader defected to a rival party, taking their loyal cadre with them."; } },
-            { cond: () => st.image > 65, effect: () => { applyStats(0, 0, 0, 0, rand(2,5)); return "ALLIANCE INVITATION! A major national coalition invites you for seat-sharing in expansion states, boosting visibility."; } }
-        ];
-        let valid = events.filter(ev => ev.cond());
-        let selected = valid[Math.floor(Math.random() * valid.length)];
-        log(`<span style="color:#e74c3c"><b>EVENT:</b></span> ${selected.effect()}`);
-    }
-
-    function evaluatePhase() {
-        let phase = phases[st.currentPhase];
-        let pass = true;
-        
-        if (phase.reqStr > 0 && st.strPop < phase.reqStr) pass = false;
-        if (phase.reqExp > 0 && st.expPop < phase.reqExp) pass = false;
-
-        updateUI();
-
-        if (pass) {
-            log(`<b>SUCCESS!</b> You met the objectives for ${phase.name}.`);
-            st.currentPhase++;
-            st.turn = 0;
-            
-            if (st.currentPhase >= phases.length) {
-                log("<b>HISTORIC VICTORY!</b> You have secured enough Lok Sabha seats to become a recognized National Party and a Kingmaker in the Parliament!");
-                endGame();
-            } else {
-                log("-----------------------------------------");
-                log(`Preparing for ${phases[st.currentPhase].name}...`);
-            }
+    function triggerElectoralEvent() {
+        if(db.stance === 'solo') {
+            const soloEvents = [
+                () => { db.backlash += 10; log("<span style='color:#e53e3e;'><b>NARRATIVE ATTACK:</b></span> Secular alliances unleash targeted campaigns calling you an ideological disruptor. Backlash rises!"); },
+                () => { db.consolidation -= 5; log("<span style='color:#dd6b20;'><b>VOTE SPLIT:</b></span> Independent rebel candidates enter your expansion seats, splitting the anti-incumbency vote pool."); }
+            ];
+            soloEvents[Math.floor(Math.random() * soloEvents.length)]();
         } else {
-            log(`<b>DEFEAT.</b> You failed to reach the required vote share in ${phase.name}. Your party has been politically marginalized.`);
-            endGame();
+            const alliedEvents = [
+                () => { db.consolidation += 3; log("<span style='color:#38a169;'><b>JOINT RALLY:</b></span> The coalition's star campaigner shares the stage with you, triggering total consolidation of minority and secular votes."); },
+                () => { db.funds -= 4; log("<span style='color:#dd6b20;'><b>ALLIANCE TAX:</b></span> Your party shifts ₹4 Cr to support a struggling secular partner in a neighboring close-contest seat."); }
+            ];
+            alliedEvents[Math.floor(Math.random() * alliedEvents.length)]();
         }
     }
 
-    function endGame() {
-        st.gameOver = true;
-        document.querySelector('.actions').innerHTML = `<button style="grid-column: span 2; background:#27ae60;" onclick="location.reload()">Restart Campaign</button>`;
-    }
-
-    function applyStats(f, c, i, s, e) {
-        st.funds += f; st.cadre += c; st.image += i; st.strPop += s; st.expPop += e;
-        if(st.funds < 0) st.funds = 0;
-        if(st.cadre < 0) st.cadre = 0;
-        if(st.image < 0) st.image = 0; if(st.image > 100) st.image = 100;
-        if(st.strPop < 0) st.strPop = 0; if(st.strPop > 100) st.strPop = 100;
-        if(st.expPop < 0) st.expPop = 0; if(st.expPop > 100) st.expPop = 100;
-    }
-
-    function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
-    function logErr(msg) { log(`<span style="color:#e74c3c">${msg}</span>`); }
-    function log(msg) {
-        const box = document.getElementById('log-container');
-        box.innerHTML += `<div class="log-entry">> ${msg}</div>`;
-        box.scrollTop = box.scrollHeight;
-    }
-
-    function updateUI() {
-        let phase = phases[st.currentPhase];
-        if(!phase) return;
-
-        document.getElementById('party-desc').innerText = `Archetype: ${st.archetype}`;
-        document.getElementById('phase-display').innerText = `${phase.name} (${phase.turns - st.turn} Weeks Left)`;
+    function evaluateCountingDay() {
+        document.getElementById('weeks-counter').innerText = "COUNTING RESULTS STATUS";
         
-        document.getElementById('val-funds').innerText = `₹${st.funds} Cr`;
-        document.getElementById('val-cadre').innerText = st.cadre.toLocaleString();
-        document.getElementById('val-image').innerText = `${Math.floor(st.image)}%`;
+        let report = "<h2>ELECTION COUNTING ROOM</h2>";
+        let seatsWon = 0;
+        let totalContested = 0;
 
-        document.getElementById('str-name').innerText = st.strName;
-        document.getElementById('str-pop').innerText = `${Math.floor(st.strPop)}%`;
-        document.getElementById('str-bar').style.width = `${st.strPop}%`;
-        document.getElementById('str-target').innerText = phase.reqStr > 0 ? `Target: ${phase.reqStr}%` : `No target this phase`;
+        Object.keys(db.states).forEach(sKey => {
+            db.states[sKey].seats.forEach(seat => {
+                if(seat.status !== "Contesting") return;
+                totalContested++;
+                
+                // Win threshold standard baseline set at 45% for a pluralistic or multi-corner win
+                if(seat.projection >= 45) {
+                    seatsWon++;
+                    report += `<p style='color:#2f855a;'>✔ <b>WON:</b> ${seat.name} (${db.states[sKey].name}) with ${Math.floor(seat.projection)}% vote share!</p>`;
+                } else {
+                    report += `<p style='color:#c53030;'>❌ <b>LOST:</b> ${seat.name} (${db.states[sKey].name}) with ${Math.floor(seat.projection)}% vote share.</p>`;
+                }
+            });
+        });
 
-        document.getElementById('exp-name').innerText = st.expName;
-        document.getElementById('exp-pop').innerText = `${Math.floor(st.expPop)}%`;
-        document.getElementById('exp-bar').style.width = `${st.expPop}%`;
-        document.getElementById('exp-target').innerText = phase.reqExp > 0 ? `Target: ${phase.reqExp}%` : `No target this phase`;
+        report += `<hr><h3>Final Verdict: Won ${seatsWon} out of ${totalContested} contested seats.</h3>`;
+        
+        if(db.stance === 'solo') {
+            if(seatsWon >= 2) {
+                report += "<p><b>STRATEGIC VERDICT:</b> You successfully defended your core bastion independently. However, your aggressive expansion split the secular votes in fringe seats, drawing intense national heat.</p>";
+            } else {
+                report += "<p><b>STRATEGIC VERDICT:</b> The 'Vote-Cutter' tag completely destroyed your ground campaign. Isolated without alliance consolidation, voters consolidated behind larger parties to defeat you.</p>";
+            }
+        } else {
+            if(seatsWon === totalContested) {
+                report += "<p><b>STRATEGIC VERDICT:</b> Total Alliance Success! By staying within your allocated quota, you perfectly consolidated your core votes and achieved a 100% conversion strike rate for the coalition.</p>";
+            } else {
+                report += "<p><b>STRATEGIC VERDICT:</b> You retained your core spaces, but a lower overall wave across the alliance structural framework limited potential sweep margins.</p>";
+            }
+        }
+
+        report += `<button class='sim-btn' onclick='location.reload()'>Re-evaluate Electoral Stance</button>`;
+        document.getElementById('war-room').innerHTML = report;
+    }
+
+    function log(msg) {
+        const consoleEl = document.getElementById('log-console');
+        consoleEl.innerHTML += `<div>• ${msg}</div>`;
+        consoleEl.scrollTop = consoleEl.scrollHeight;
     }
 </script>
 
 </body>
 </html>
+                    
